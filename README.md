@@ -28,7 +28,18 @@ Streamer girl wants me to create a discord bot for her. This bot will welcome pe
 2. This bot needs to be hosted locally, maybe on RASPI or on computer.
 3. ???
 
+### Bot settings
 When creating the bot discord get bot token and enable `Server Members Intent`
+
+To invite the bot to a server, set it up by going to developer dashboard, OAUTH2 URL Generator, check bot. Then check these following permissions for bot:
+* Read Messages/View Channels
+* Send Messages
+* Read Message History
+* Mention Everyone 
+* Manage Roles
+
+Then just copy the generated URL and paste it into browser. This should bring up discord and we can add the bot to our chosen server.
+
 
 ## Development and Tools
 1. Discord developer account
