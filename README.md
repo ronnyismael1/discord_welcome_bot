@@ -4,8 +4,8 @@ Streamer girl wants me to create a discord bot for her. This bot will welcome pe
 
 ## Workflow
 1. Person joins server, bot sees there's new person either from watching the welcome channel or some other API.
-2. Bot will send private DM to new person, and also send message to private bot channel notifying admins that it successfully detected new user and prompted them.
-3. The private DM will say hello, and then begin to prompt them with questionnaire
+2. Bot will send them a message in a private new thread maybe called #start-here, and also send message to private bot channel notifying admins that it successfully detected new user and prompted them.
+3. The private thread will say hello, and then begin to prompt them with questionnaire
 4. New person will respond to questionnaire and the bot will record their answers
 5. The bot will take their answers and create them a custom "My Lore" image
 6. Bot will send the image to the user and tell them to post it in the introduction channel
@@ -28,7 +28,7 @@ Streamer girl wants me to create a discord bot for her. This bot will welcome pe
 2. This bot needs to be hosted locally, maybe on RASPI or on computer.
 3. ???
 
-### Bot settings
+### Discord and Bot settings
 When creating the bot discord get bot token and enable `Server Members Intent`
 
 To invite the bot to a server, set it up by going to developer dashboard, OAUTH2 URL Generator, check bot. Then check these following permissions for bot:
@@ -38,11 +38,18 @@ To invite the bot to a server, set it up by going to developer dashboard, OAUTH2
 * Mention Everyone 
 * Manage Roles
 
+Also bot needs to be able to view and manage channels
+
 Then just copy the generated URL and paste it into browser. This should bring up discord and we can add the bot to our chosen server.
 
+In the discord settings we need to create channel category Onboarding and create Unverified role, add everyone to that role.
+
+Make introduction channel invisible to unverified, then we remove unverified role after they complete bot.
 
 ## Development and Tools
 1. Discord developer account
 2. Developed in Linux environment
 3. Python is easiest - but I want to do C++ to manually manage websockets, etc. 
 
+## Debugging
+Run: `python3 -m pdb welcome_bot.py` or ``python3 -m pudb welcome_bot.py``
