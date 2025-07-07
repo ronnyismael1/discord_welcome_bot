@@ -63,3 +63,15 @@ class OnboardingDB:
         """, (user_id,))
         return cur.fetchone()
 
+
+    def get_answers(self, user_id):
+        cur = self.conn.cursor()
+        cur.execute("""
+            SELECT answers FROM onboarding WHERE user_id=?
+        """, (user_id,))
+        row = cur.fetchone()
+        if row and row["answers"]:
+            return json.loads(row["answers"])
+        return {}
+
+

@@ -2,7 +2,7 @@ import discord
 import asyncio
 from contextlib import nullcontext
 from db.onboarding_db import OnboardingDB
-# from modules.lore_image import generate_lore_image
+from modules.lore_image import generate_lore_image
 
 db = OnboardingDB()
 
@@ -231,7 +231,8 @@ async def start_questionnaire(client, member, channel):
         # Save all answers
         db.save_answers(member.id, answers)
         db.update_status(member.id, "completed")
-
+        
+        await generate_and_send_custom_usr_lore(member)
         await confirm_and_clean(member, channel)
 
     except asyncio.TimeoutError:
@@ -264,4 +265,16 @@ async def confirm_and_clean(member, channel):
         )
     else:
         print("No #staff-logs channel found.")
+
+async def generate_and_send_custom_usr_lore(member):
+    answers = db.get_answers(member.id)
+
+    image_path = generate_lore_image(answers, username=member.name, user_id=member.id)
+
+    intro_channel = discord.utils.get(member.guild.text_channels, name="introductions")
+    if intro_channel:
+        await intro_channel.send(
+            f"🌟 {member.mention} has completed onboarding!",
+            file=discord.File(image_path)
+        )
 
