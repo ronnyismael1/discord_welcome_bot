@@ -9,3 +9,6 @@ First we want to develop in a venv for isolation.
 Okay now we install discord.
 1. `pip install -U discord.py`
 
+## Database
+Read database: `sqlite3 ~/Repos/discord_welcome_bot/implementation/src/python/data/onboarding.db`
+Or with GUI `sqlitebrowser ~/Repos/discord_welcome_bot/implementation/src/python/data/onboarding.db &`
