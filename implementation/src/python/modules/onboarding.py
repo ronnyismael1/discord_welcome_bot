@@ -1,27 +1,51 @@
 import discord
-import os
 import asyncio
 from contextlib import nullcontext
 from db.onboarding_db import OnboardingDB
-
-# disable gateway logging while debugging
-import logging
-logging.getLogger("discord.gateway").setLevel(logging.ERROR)
-#########################################
+# from modules.lore_image import generate_lore_image
 
 db = OnboardingDB()
 
-with open("../../../discord_bot_token") as f:
-    TOKEN = f.read().strip()
+###################################
+#
+#   CLIENT LISTENING EVENTS
+#
+###################################
 
-intents = discord.Intents.default()
-intents.members = True  # to get member join events
-intents.messages = True  # to get on_message events
-intents.message_content = True  # REQUIRED to read message content
+def register(client):
+    @client.event
+    async def on_ready():
+        print(f"Logged in as {client.user} (ID: {client.user.id})")
+        print("------")
 
+    @client.event
+    async def on_member_join(member):
+        ret = await begin_onboarding(member)
+        if ret == -1: print("Error onboarding user.")
 
-client = discord.Client(intents=intents)
+    @client.event
+    async def on_message(message):
+        # Ignore bot's own messages
+        if message.author == client.user:
+            return
 
+        # If user types "!test", trigger the welcome
+        if message.content.strip() == "!test":
+            await message.channel.send("🔧 Test command detected! Running welcome logic...")
+            ret = await begin_onboarding(message.author)
+            if ret == -1: print("Error onboarding user.")
+
+        # Only care about `start-here` channels
+        if not message.channel.name.startswith("start-here-"):
+            return
+        # Load the onboarding state from DB
+        record = db.get_user(message.author.id)
+        if record is None:
+            return  # not in DB → ignore
+        if record["channel_id"] != str(message.channel.id):
+            return  # wrong channel → ignore
+        if message.content.strip().lower() == "!start":
+            await start_questionnaire(client, message.author, message.channel)
 
 ###################################
 #
@@ -145,7 +169,7 @@ async def send_welcome_message(member, channel):
         return -1
 
 
-async def start_questionnaire(member, channel):
+async def start_questionnaire(client, member, channel):
     await channel.send("📋 Starting questionnaire…")
 
     answers = {}
@@ -241,46 +265,3 @@ async def confirm_and_clean(member, channel):
     else:
         print("No #staff-logs channel found.")
 
-
-###################################
-#
-#   CLIENT LISTENING EVENTS
-#
-###################################
-
-
-@client.event
-async def on_ready():
-    print(f"Logged in as {client.user} (ID: {client.user.id})")
-    print("------")
-
-@client.event
-async def on_member_join(member):
-    ret = await begin_onboarding(member)
-    if ret == -1: print("Error onboarding user.")
-
-@client.event
-async def on_message(message):
-    # Ignore bot's own messages
-    if message.author == client.user:
-        return
-
-    # If user types "!test", trigger the welcome
-    if message.content.strip() == "!test":
-        await message.channel.send("🔧 Test command detected! Running welcome logic...")
-        ret = await begin_onboarding(message.author)
-        if ret == -1: print("Error onboarding user.")
-
-    # Only care about `start-here` channels
-    if not message.channel.name.startswith("start-here-"):
-        return
-    # Load the onboarding state from DB
-    record = db.get_user(message.author.id)
-    if record is None:
-        return  # not in DB → ignore
-    if record["channel_id"] != str(message.channel.id):
-        return  # wrong channel → ignore
-    if message.content.strip().lower() == "!start":
-        await start_questionnaire(message.author, message.channel)
-
-client.run(TOKEN)
