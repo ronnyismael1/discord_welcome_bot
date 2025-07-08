@@ -1,2 +1,4 @@
 discord_bot_token
 ./implementation/src/python/data/onboarding.db
+./implementation/src/python/images/
+./implementation/src/python/db/__pycache__/
