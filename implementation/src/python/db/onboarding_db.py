@@ -2,6 +2,9 @@ import sqlite3
 import json
 from datetime import datetime
 
+STATUS_WAITING = "waiting"
+STATUS_COMPLETED = "completed"
+
 class OnboardingDB:
     def __init__(self, db_path="data/onboarding.db"):
         self.conn = sqlite3.connect(db_path)

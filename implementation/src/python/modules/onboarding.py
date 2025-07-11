@@ -1,12 +1,26 @@
+#######################
+#
+# This module handles sending onboarding
+# messages to new users and sending created
+# lore images to the introduction channel.
+#
+#######################
+
 import os
 import discord
 import asyncio
 from contextlib import nullcontext
-from db.onboarding_db import OnboardingDB
+from db.onboarding_db import STATUS_COMPLETED, STATUS_WAITING, OnboardingDB
 from modules.lore_image import generate_lore_image
 
 db = OnboardingDB()
 user_tasks = {}
+
+ROLE_STAFF              = "Staff"
+ROLE_UNVERIFIED         = "Unverified"
+CHANNEL_STAFF_LOGS      = "staff-logs"
+CHANNEL_INTRODUCTION    = "introductions"
+CATEGORY_ONBOARDING     = "Onboarding"
 
 ###################################
 #
@@ -54,7 +68,7 @@ def register(client):
                 await message.channel.send("**Previous onboarding cancelled.**")
 
             # reset DB state
-            db.update_status(message.author.id, "waiting")
+            db.update_status(message.author.id, STATUS_WAITING)
             db.save_answers(message.author.id, {})
 
             # then start a new task
@@ -70,7 +84,7 @@ def register(client):
 
 async def begin_onboarding(member):
     # add user to unverified role
-    unverified_role = discord.utils.get(member.guild.roles, name="Unverified")
+    unverified_role = discord.utils.get(member.guild.roles, name=ROLE_UNVERIFIED)
     if unverified_role:
         await member.add_roles(unverified_role, reason="New member onboarding")
         print(f"Assigned Unverified role to {member.display_name}")
@@ -89,8 +103,8 @@ async def begin_onboarding(member):
         onboarding_channel.name
     )
 
-    # log that the user finished onbaording 
-    staff_channel = discord.utils.get(member.guild.text_channels, name="staff-logs")
+    # log that the user finished onbaording
+    staff_channel = discord.utils.get(member.guild.text_channels, name=CHANNEL_STAFF_LOGS)
     if staff_channel:
         await staff_channel.send(
             f"{member.display_name} has been onboarded and is waiting to start in {onboarding_channel.mention}."
@@ -103,14 +117,14 @@ async def begin_onboarding(member):
 
 async def create_onboarding_channel(member):
     # Look for a category or fallback to guild
-    category = discord.utils.get(member.guild.categories, name="Onboarding")
+    category = discord.utils.get(member.guild.categories, name=CATEGORY_ONBOARDING)
     overwrites = {
         member.guild.default_role: discord.PermissionOverwrite(read_messages=False),
         member: discord.PermissionOverwrite(read_messages=True, send_messages=True),
     }
 
     # Staff role can also see
-    staff_role = discord.utils.get(member.guild.roles, name="Staff")
+    staff_role = discord.utils.get(member.guild.roles, name=ROLE_STAFF)
     if staff_role:
         overwrites[staff_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
 
@@ -151,7 +165,7 @@ async def send_welcome_message(member, channel):
         print(f"Error in questionnaire invite to {member}.")
 
         # Record error in staff-logs
-        channel = discord.utils.get(member.guild.text_channels, name="staff-logs")
+        channel = discord.utils.get(member.guild.text_channels, name=CHANNEL_STAFF_LOGS)
         if channel:
             await channel.send(f"ERROR: Could not DM {member.mention}!")
         else:
@@ -247,8 +261,8 @@ async def start_questionnaire(client, member, channel):
 
         # Save all answers
         db.save_answers(member.id, answers)
-        db.update_status(member.id, "completed")
-        
+        db.update_status(member.id, STATUS_COMPLETED)
+
         await generate_and_send_custom_usr_lore(client, member, channel)
         await confirm_and_clean(member, channel)
 
@@ -257,12 +271,12 @@ async def start_questionnaire(client, member, channel):
             "⏳ Timeout: You took too long to respond. "
             "Please type `!start` to restart the questionnaire when ready."
         )
-        db.update_status(member.id, "waiting")
+        db.update_status(member.id, STATUS_WAITING)
 
 
 async def confirm_and_clean(member, channel):
     # remove Unverified role
-    unverified_role = discord.utils.get(member.guild.roles, name="Unverified")
+    unverified_role = discord.utils.get(member.guild.roles, name=ROLE_UNVERIFIED)
     if unverified_role:
         await member.remove_roles(unverified_role, reason="Completed onboarding")
         print(f"Removed Unverified role from {member.display_name}")
@@ -270,7 +284,7 @@ async def confirm_and_clean(member, channel):
         print("Unverified role not found when trying to remove it.")
 
     # update DB: mark completed
-    db.update_status(member.id, "completed")
+    db.update_status(member.id, STATUS_COMPLETED)
 
     await channel.send(
         "✅ Thanks! Just sent. If you wish to redo your card just send "
@@ -278,7 +292,7 @@ async def confirm_and_clean(member, channel):
     )
 
     # log in staff-logs
-    staff_channel = discord.utils.get(member.guild.text_channels, name="staff-logs")
+    staff_channel = discord.utils.get(member.guild.text_channels, name=CHANNEL_STAFF_LOGS)
     if staff_channel:
         await staff_channel.send(
             f"✅ {member.display_name} has completed onboarding and their Unverified role was removed."
