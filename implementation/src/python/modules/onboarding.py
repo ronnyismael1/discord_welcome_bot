@@ -46,16 +46,6 @@ def register(client):
         if message.author == client.user:
             return
 
-        # TARGET CHANNEL: any
-        # PERMISSIONS: Any role
-        # DESC:
-        #   Starts onboarding for calling user
-        #
-        if message.content.strip() == "!test":
-            await message.channel.send("🔧 Test command detected! Running welcome logic...")
-            ret = await begin_onboarding(message.author)
-            if ret == -1: print("Error onboarding user.")
-
         # TARGET CHANNEL: #start-here-*
         # PERMISSIONS: Any role
         # DESC:
@@ -63,11 +53,7 @@ def register(client):
         #   questionnaire, they can type `!start`.
         #
         if message.channel.name.startswith("start-here-"):
-            record = db.get_user(message.author.id)
-            if record is None or record["channel_id"] != str(message.channel.id):
-                return
-            if message.content.strip().lower() == "!start":
-                await restart_onboarding(client, message.author, message.channel)
+            await handle_start_here_channel(message, client)
             return
 
         # TARGET CHANNEL: #bot-manager
@@ -82,89 +68,8 @@ def register(client):
         #   `!db force_onboard_all` - Onboard all users in discord server
         #
         if message.channel.name == "bot-manager":
-            guild = message.guild
-            content = message.content.strip()
-
-            # list all commands
-            if content == "!ls":
-                commands = (
-                    "`!db missing` - Lists all users in discord but not in DB\n"
-                    "`!db list` - Lists all users in DB\n"
-                    "`!db sync` - Syncs all users in discord but not in DB\n"
-                    "`!db onboard @<user>` - Onboard a specific user\n"
-                    "`!db force_onboard_all` - Onboard all users in discord server"
-                )
-                await message.channel.send(f"Available commands:\n{commands}")
-                return
-
-            # list all users in discord but not in DB
-            if content == "!db missing":
-                # Get all non-bot members in the server
-                guild_members = [
-                    m for m in message.guild.members if not m.bot
-                ]
-
-                # Get all user IDs from DB
-                db_users = db.get_all_users()
-                db_user_ids = set(int(u['user_id']) for u in db_users)
-
-                # Find members NOT in DB
-                missing = []
-                for m in guild_members:
-                    if m.id not in db_user_ids:
-                        missing.append(f"<@{m.id}> ({m.id})")  # mention user + ID
-
-                if missing:
-                    msg_text = "\n".join(missing)
-                    await message.channel.send(f"🙋 Users NOT in DB:\n{msg_text}")
-                else:
-                    await message.channel.send("✅ All users in Discord are already in the DB.")
-                return
-
-            # list all waiting users in DB
-            if content == "!db list":
-                records = db.get_all_users()
-                if records:
-                    msg_text = "\n".join(
-                        [f"{r['username']} ({r['user_id']}) - {r['status']}" for r in records]
-                    )
-                    await message.channel.send(f"📋 Users in DB:\n{msg_text}")
-                else:
-                    await message.channel.send("📋 DB is empty.")
-                return
-
-            # sync — onboard everyone not in DB
-            if content == "!db sync":
-                count = 0
-                for member in guild.members:
-                    if not member.bot and db.get_user(member.id) is None:
-                        await begin_onboarding(member)
-                        count += 1
-                await message.channel.send(f"✅ Synced! Onboarded {count} missing users.")
-                return
-
-            # onboard specific user
-            if content.startswith("!db onboard"):
-                if message.mentions:
-                    target = message.mentions[0]
-                    await begin_onboarding(target) # TODO: Add timeout handling here
-                    await message.channel.send(f"✅ Onboarding started for {target.display_name}")
-                else:
-                    await message.channel.send("❌ Please mention a user.")
-                return
-
-            # onboard all users (force)
-            if content == "!db force_onboard_all":
-                count = 0
-                for member in guild.members:
-                    if not member.bot:
-                        await begin_onboarding(member)
-                        count += 1
-                await message.channel.send(f"✅ Onboarded all users ({count})")
-                return
-
-            # unknown command fallback
-            await message.channel.send("❌ Unknown admin command. Try: `!db list`, `!db sync`, `!db onboard @user`, `!db onboard_all`")
+            await handle_bot_manager_channel(message, client)
+            return
 
 
 ###################################
@@ -172,6 +77,102 @@ def register(client):
 #  PRIVATE FUNCTIONS
 #
 ###################################
+
+
+async def handle_start_here_channel(message, client):
+    record = db.get_user(message.author.id)
+    if record is None or record["channel_id"] != str(message.channel.id):
+        return
+    if message.content.strip().lower() == "!start":
+        await restart_onboarding(client, message.author, message.channel)
+
+
+
+async def handle_bot_manager_channel(message, client):
+    guild = message.guild
+    content = message.content.strip()
+
+    # list all commands
+    if content == "!ls":
+        commands = (
+            "`!db missing` - Lists all users in discord but not in DB\n"
+            "`!db list` - Lists all users in DB\n"
+            "`!db sync` - Syncs all users in discord but not in DB\n"
+            "`!db onboard @<user>` - Onboard a specific user\n"
+            "`!db force_onboard_all` - Onboard all users in discord server"
+        )
+        await message.channel.send(f"Available commands:\n{commands}")
+        return
+
+    # list all users in discord but not in DB
+    if content == "!db missing":
+        # Get all non-bot members in the server
+        guild_members = [
+            m for m in message.guild.members if not m.bot
+        ]
+
+        # Get all user IDs from DB
+        db_users = db.get_all_users()
+        db_user_ids = set(int(u['user_id']) for u in db_users)
+
+        # Find members NOT in DB
+        missing = []
+        for m in guild_members:
+            if m.id not in db_user_ids:
+                missing.append(f"<@{m.id}> ({m.id})")  # mention user + ID
+
+        if missing:
+            msg_text = "\n".join(missing)
+            await message.channel.send(f"🙋 Users NOT in DB:\n{msg_text}")
+        else:
+            await message.channel.send("✅ All users in Discord are already in the DB.")
+        return
+
+    # list all waiting users in DB
+    if content == "!db list":
+        records = db.get_all_users()
+        if records:
+            msg_text = "\n".join(
+                [f"{r['username']} ({r['user_id']}) - {r['status']}" for r in records]
+            )
+            await message.channel.send(f"📋 Users in DB:\n{msg_text}")
+        else:
+            await message.channel.send("📋 DB is empty.")
+        return
+
+    # sync — onboard everyone not in DB
+    if content == "!db sync":
+        count = 0
+        for member in guild.members:
+            if not member.bot and db.get_user(member.id) is None:
+                await begin_onboarding(member)
+                count += 1
+        await message.channel.send(f"✅ Synced! Onboarded {count} missing users.")
+        return
+
+    # onboard specific user
+    if content.startswith("!db onboard"):
+        if message.mentions:
+            target = message.mentions[0]
+            await begin_onboarding(target)
+            await message.channel.send(f"✅ Onboarding started for {target.display_name}")
+        else:
+            await message.channel.send("❌ Please mention a user.")
+        return
+
+    # onboard all users (force)
+    if content == "!db force_onboard_all":
+        count = 0
+        for member in guild.members:
+            if not member.bot:
+                await begin_onboarding(member)
+                count += 1
+        await message.channel.send(f"✅ Onboarded all users ({count})")
+        return
+
+    # unknown command fallback
+    await message.channel.send("❌ Unknown admin command. Try: `!db list`, `!db sync`, `!db onboard @user`, `!db onboard_all`")
+
 
 async def restart_onboarding(client, user, channel):
     # cancel existing task
