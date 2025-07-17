@@ -2,7 +2,7 @@ import sqlite3
 import json
 from datetime import datetime
 
-STATUS_WAITING = "waiting"
+STATUS_WAITING   = "waiting"
 STATUS_COMPLETED = "completed"
 
 class OnboardingDB:
@@ -56,6 +56,13 @@ class OnboardingDB:
         cur = self.conn.cursor()
         cur.execute("""
             SELECT * FROM onboarding WHERE status='waiting'
+        """)
+        return cur.fetchall()
+
+    def get_all_users(self):
+        cur = self.conn.cursor()
+        cur.execute("""
+            SELECT * FROM onboarding
         """)
         return cur.fetchall()
 

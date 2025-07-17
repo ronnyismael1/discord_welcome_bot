@@ -27,10 +27,9 @@ with open("../../../twitch_client_secret") as f:
 ###################################
 
 def register(client):
-    """
-    Registers the stream monitoring task with the client.
-    """
-    client.loop.create_task(monitor_stream(client))
+    async def setup():
+        asyncio.create_task(monitor_stream(client))
+    client.setup_hook = setup
 
 async def monitor_stream(client):
     await client.wait_until_ready()
@@ -112,26 +111,27 @@ async def check_twitch_live(session, token):
         return bool(streams)
 
 async def check_tiktok_live(session):
-    """
-    Checks if TARGET_USERNAME is currently live on TikTok.
-    This scrapes the TikTok profile page and looks for the LIVE badge.
-    """
-    url = f"https://www.tiktok.com/@{TARGET_USERNAME}"
-
-    headers = {
-        "User-Agent": "Mozilla/5.0",  # TikTok rejects empty/default user agents
-    }
-
-    async with session.get(url, headers=headers) as resp:
-        if resp.status != 200:
-            print(f"Error fetching TikTok page: {resp.status}")
-            return False
-
-        html = await resp.text()
-
-        # look for the LIVE badge text
-        if "LIVE</span>" in html or "LIVE" in html:
-            return True
-
-        return False
+    # """
+    # Checks if TARGET_USERNAME is currently live on TikTok.
+    # This scrapes the TikTok profile page and looks for the LIVE badge.
+    # """
+    # url = f"https://www.tiktok.com/@{TARGET_USERNAME}"
+    #
+    # headers = {
+    #     "User-Agent": "Mozilla/5.0",  # TikTok rejects empty/default user agents
+    # }
+    #
+    # async with session.get(url, headers=headers) as resp:
+    #     if resp.status != 200:
+    #         print(f"Error fetching TikTok page: {resp.status}")
+    #         return False
+    #
+    #     html = await resp.text()
+    #
+    #     # look for the LIVE badge text
+    #     if "LIVE</span>" in html or "LIVE" in html:
+    #         return True
+    #
+    #     return False
+    return False
 

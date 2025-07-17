@@ -34,8 +34,5 @@
 ### Requirements
 1. Whenever gloomxmoon goes live, we need the bot to send a message to the #Announcements channel.
 
-### Setup
-*TWITCH API*
-1. Log into Twitch Developer Console and then click "Register Your Application"
-2. 
-
+### Notes
+Right now this module only works for checking TWITCH live status, since twitch has a great API for this. Need workaround for Tiktok.
