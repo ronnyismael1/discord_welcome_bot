@@ -20,7 +20,7 @@ Or with GUI `sqlitebrowser ~/Repos/discord_welcome_bot/implementation/src/python
 
 ## Debugging
 
-Run: `python3 -m pdb welcome_bot.py` or ``python3 -m pudb welcome_bot.py``
+Run: `python3 -m pdb main.py` or ``python3 -m pudb main.py``
 
 ## File Structure
 

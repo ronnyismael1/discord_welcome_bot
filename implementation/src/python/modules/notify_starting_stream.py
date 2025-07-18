@@ -11,9 +11,12 @@ import os
 import discord
 import asyncio
 import aiohttp
+from modules.constants import (
+        CHANNEL_ANNOUNCEMENTS,
+        TARGET_USERNAME,
+)
 
-TARGET_USERNAME = "gloomxmoon"
-ALERT_CHANNEL_NAME = "☾-𝒜𝔫𝔫𝔬𝔲𝔫𝔠𝔢𝔪𝔢𝔫𝔱𝔰・₊˚"
+ALERT_CHANNEL_NAME = CHANNEL_ANNOUNCEMENTS
 
 with open("../../../twitch_client_secret") as f:
     lines = [line.strip() for line in f.readlines()]

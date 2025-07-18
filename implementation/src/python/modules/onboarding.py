@@ -12,15 +12,16 @@ import asyncio
 from contextlib import nullcontext
 from db.onboarding_db import STATUS_COMPLETED, STATUS_WAITING, OnboardingDB
 from modules.lore_image import generate_lore_image
+from modules.constants import (
+    ROLE_STAFF,
+    ROLE_UNVERIFIED,
+    CHANNEL_STAFF_LOGS,
+    CHANNEL_BOT_MANAGER,
+    CATEGORY_ONBOARDING,
+)
 
 db = OnboardingDB()
 user_tasks = {}
-
-ROLE_STAFF              = "Staff"
-ROLE_UNVERIFIED         = "Unverified"
-CHANNEL_STAFF_LOGS      = "staff-logs"
-CHANNEL_INTRODUCTION    = "introductions"
-CATEGORY_ONBOARDING     = "Onboarding"
 
 ###################################
 #
@@ -67,7 +68,7 @@ def register(client):
         #   `!db onboard @<user>` - Onboard a specific user
         #   `!db force_onboard_all` - Onboard all users in discord server
         #
-        if message.channel.name == "bot-manager":
+        if message.channel.name == CHANNEL_BOT_MANAGER:
             await handle_bot_manager_channel(message, client)
             return
 
