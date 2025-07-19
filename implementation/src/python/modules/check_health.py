@@ -248,7 +248,7 @@ async def repair_server(guild):
 
     # Update after creation
     categories = {c.name: c for c in guild.categories}
-    category = categories.get(CATEGORY_ONBOARDING)
+    # category = categories.get(CATEGORY_ONBOARDING)
 
     # Create or fix channels
     for ch_name in missing_channels:
@@ -277,7 +277,6 @@ async def repair_server(guild):
 
         await guild.create_text_channel(
             name=ch_name,
-            category=category,
             overwrites=overwrites,
             reason="Repairing missing channel with proper permissions"
         )

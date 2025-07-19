@@ -32,7 +32,7 @@ if __name__ == "__main__":
         for guild in client.guilds:
             ok = await check_health.run_health_check(guild, client.user)
             if not ok:
-                print(f"❌ Health check failed on {guild.name}")
+                print(f"Health check failed on {guild.name}")
                 failed_guilds.append(guild.name)
 
         if failed_guilds:
@@ -53,14 +53,14 @@ if __name__ == "__main__":
 
     @client.event
     async def on_guild_join(guild):
-        print(f"📥 Bot was invited to a new guild: {guild.name}")
+        print(f"Bot was invited to a new guild: {guild.name}")
         ok = await check_health.run_health_check(guild, client.user)
         if not ok:
-            print(f"❌ Health check failed on {guild.name}. Leaving guild.")
+            print(f"Health check failed on {guild.name}. Leaving guild.")
             await guild.leave()
             return
 
-        print(f"Health check passed on {guild.name}.")
+        print(f"Health check passed on {guild.name}.\n")
 
         if not modules_registered:
             print("Registering modules after first successful guild.")
