@@ -29,12 +29,11 @@ user_tasks = {}
 #
 ###################################
 
-def register(client):
-    @client.event
-    async def on_ready():
-        print(f"Logged in as {client.user} (ID: {client.user.id})")
-        print("------")
+def on_ready(client):
+    print(f"[onboarding] Logged in as {client.user} (ID: {client.user.id})")
+    print("------")
 
+def register(client):
     @client.event
     async def on_member_join(member):
         ret = await begin_onboarding(member)

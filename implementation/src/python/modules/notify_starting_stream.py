@@ -30,9 +30,7 @@ with open("../../../twitch_client_secret") as f:
 ###################################
 
 def register(client):
-    async def setup():
-        asyncio.create_task(monitor_stream(client))
-    client.setup_hook = setup
+    asyncio.create_task(monitor_stream(client))
 
 async def monitor_stream(client):
     await client.wait_until_ready()
